@@ -1,0 +1,5 @@
+{"ts": 1785000000, "action": "event", "category": "-", "secrets_kept_local": 2, "obfuscated_preview": "a message mentioning <<ENTITY_1>> and <<ENTITY_2>>", "v": 1, "chain": "b4e53f2cd667dbc0991ce01ef39642b65a0b4354235e9560288bd0e9578ce8ab"}
+{"ts": 1785000060, "action": "event", "category": "-", "secrets_kept_local": 1, "obfuscated_preview": "an update to record <<ENTITY_1>>", "v": 1, "chain": "134c1f47cd3fb76f72084e706c8962fd7871c7f26f37940b6f187c76618aa3be"}
+{"v": 1, "ts": 1785000090, "action": "event", "category": "-", "secrets_kept_local": 0, "obfuscated_preview": "inserted record", "chain": "dededededededededededededededededededededededededededededededede"}
+{"ts": 1785000120, "action": "event", "category": "-", "secrets_kept_local": 3, "obfuscated_preview": "a note to <<ENTITY_2>> at <<ENTITY_3>>", "v": 1, "chain": "499215904253f6139f72cd1ce37468c1fce9b904f0c2b21709a1d7a241a16e72"}
+{"ts": 1785000180, "action": "event", "category": "-", "secrets_kept_local": 0, "obfuscated_preview": "what is the capital of Japan?", "v": 1, "chain": "53d4072948f201db646862f16dfe1fa3296744b33efb077628352a7acbf5ade1"}

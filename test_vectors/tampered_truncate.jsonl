@@ -1,0 +1,2 @@
+{"ts": 1785000000, "action": "event", "category": "-", "secrets_kept_local": 2, "obfuscated_preview": "a message mentioning <<ENTITY_1>> and <<ENTITY_2>>", "v": 1, "chain": "b4e53f2cd667dbc0991ce01ef39642b65a0b4354235e9560288bd0e9578ce8ab"}
+{"ts": 1785000060, "action": "event", "category": "-", "secrets_kept_local": 1, "obfuscated_preview": "an update to record <<ENTITY_1>>", "v": 1, "chain": "134c1f47cd3fb76f72084e706c8962fd7871c7f26f37940b6f187c76618aa3be"}

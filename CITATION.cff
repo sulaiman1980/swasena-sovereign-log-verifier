@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+title: "Swasena Sovereign Log — Independent Verifier"
+message: "If you reference this work, please cite it using the following metadata."
+type: software
+authors:
+  - name: "Swasena"
+repository-code: "https://github.com/sulaiman1980/swasena-sovereign-log-verifier"
+abstract: >-
+  An independent, standard-library-only verifier and public specification for a
+  tamper-evident, append-only sovereign audit log. Given the log file alone — no
+  network, no producer code — any party can recompute the hash chain and detect
+  any interior modification, insertion, reordering, or deletion. Every claim is
+  falsifiable; limits are stated first. Anteriority of each release is recorded
+  with OpenTimestamps (see ANTERIORITY.md).
+keywords:
+  - tamper-evident log
+  - hash chain
+  - independent verification
+  - transparency log
+  - AI data sovereignty
+license: MIT
