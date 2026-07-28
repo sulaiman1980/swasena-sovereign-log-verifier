@@ -106,18 +106,21 @@ treats **all** present fields except `chain` as chain-committed (Section 4).
 
 | Field | Type | Semantics | Constraint |
 |---|---|---|---|
-| `v` | integer | Format version. | REQUIRED. **MUST** equal the integer `1`. A Record whose version is not `1` is **REJECTED** (`bad_version`). |
+| `v` | integer | Format version. | REQUIRED. **MUST** be the JSON number (integer) `1`. A Record whose version is absent or not the integer `1` is **REJECTED** (`bad_version`). The JSON boolean `true` **MUST** be rejected (not treated as `1`), even though `true == 1` in some languages. |
 | `ts` | integer | Unix epoch seconds at append time. | REQUIRED. Integer, not float. |
 | `action` | string | An opaque event/label string (e.g. `"<label>"`). Opaque to the Verifier. | REQUIRED. |
 | `category` | string | An opaque free-form reason code (e.g. `"<reason>"` or `-`), ignored by the Verifier. | REQUIRED. MAY be `-` when not applicable. |
 | `secrets_kept_local` | integer | A non-negative integer count of redacted values for this event — a **count only**, never a raw value. | REQUIRED. MUST NOT be a raw value. |
 | `obfuscated_preview` | string | A preview of the event, truncated. Contains only placeholder tokens (e.g. `<<ENTITY_1>>`, `<<ENTITY_2>>`), never raw values. | REQUIRED. At most 120 characters. |
-| `chain` | string | The chain link for this Record (Section 5). 64 lowercase hexadecimal characters. | REQUIRED. Excluded from `canonical()`. |
+| `chain` | string | The chain link for this Record (Section 5). 64 lowercase hexadecimal characters. | REQUIRED. **MUST** be a JSON string (lowercase hex); a non-string `chain` is **REJECTED** (`bad_chain_type`). Excluded from `canonical()`. |
 
 **Version tag (normative).** `v` is the profile discriminator. A conforming
 Verifier **MUST** reject any Record whose `v` is absent or not equal to the
 integer `1` with reason `bad_version`, so that Producers and Verifiers of a
-different profile never silently cross-verify.
+different profile never silently cross-verify. A conforming Verifier **MUST**
+treat `v` as an integer: the JSON boolean `true` is **REJECTED** with reason
+`bad_version`, even though it equals `1` in some languages (e.g. Python
+`True == 1`).
 
 **Privacy invariant (normative).** The Producer **MUST NOT** place any raw
 value into any field. `obfuscated_preview` **MUST** contain only placeholder
@@ -292,15 +295,19 @@ OUTPUT: {ok: bool, ...} and process exit code (0 intact, 1 rejected, 2 error)
          On any parse failure -> REJECT {reason: "bad_json", index: i}.
       c. If the parsed value is not a JSON object
          -> REJECT {reason: "not_object", index: i}.
-      d. If record["v"] != 1 (absent or any other value)
-         -> REJECT {reason: "bad_version", index: i}.
+      d. If record["v"] is not the integer 1 (absent, any other value, or the
+         JSON boolean true) -> REJECT {reason: "bad_version", index: i}.
+         The check treats v as an integer: the boolean true is rejected here
+         even though true == 1 in some languages.
       e. If the object has no "chain" field
          -> REJECT {reason: "missing_chain", index: i}.
-      f. expected := HEX(SHA256( UTF8(prev) || 0x00 || canonical(record) ))
-      g. If expected != record["chain"]
+      f. If record["chain"] is not a JSON string
+         -> REJECT {reason: "bad_chain_type", index: i}.
+      g. expected := HEX(SHA256( UTF8(prev) || 0x00 || canonical(record) ))
+      h. If expected != record["chain"]
          -> REJECT {reason: "chain_mismatch", index: i,
                     expected, found: record["chain"]}.
-      h. prev := record["chain"]   # advance the chain
+      i. prev := record["chain"]   # advance the chain
          n    := n + 1
 3.  If n == 0 -> REJECT {reason: "empty_log", records: 0}.
 4.  If --expect-count N was given and n != N
@@ -328,7 +335,9 @@ Notes:
   tagged `"v": 1`, obeying the canonical number rule (Section 4a) and free of
   duplicate keys (Section 4e).
 - **Verifier scope vs. producer MUSTs.** The Verifier enforces the presence and
-  validity of `v` (`= 1`) and `chain`, together with the canonical-number
+  validity of `v` (the integer `1`; the boolean `true` is rejected as
+  `bad_version`) and `chain` (present and a string, else `missing_chain` /
+  `bad_chain_type`), together with the canonical-number
   (Section 4a) and duplicate-key (Section 4e) rules; it does **not** enforce the
   presence of the other REQUIRED fields (`ts`, `action`, `category`,
   `secrets_kept_local`, `obfuscated_preview`) or the ≤120-character/privacy
@@ -336,6 +345,12 @@ Notes:
   integrity check. A record carrying only `v` and a correct `chain` therefore
   verifies as self-consistent; the integrity guarantee is about the chain, not
   schema completeness.
+
+- **Type strictness (interop).** The requirements that `v` be the integer `1`
+  (rejecting the boolean `true`) and that `chain` be a string were confirmed by
+  an independent implementation, which surfaced these type-strictness gaps; a
+  conforming Verifier in any language **MUST** enforce them so that
+  loosely-typed and strictly-typed implementations reach the same verdict.
 
 A conforming Verifier **MUST** reject a log that the normative algorithm rejects,
 and **MUST** accept a log it accepts, for the same input bytes.
@@ -476,6 +491,12 @@ it **MUST** treat malformed lines as rejection or skip-blank only, and **MUST
 NOT** execute log content. The reference Verifier uses the JSON parser and
 standard hashing only.
 
+For pathologically nested input, the normative behavioral requirement is that
+the Verifier **reject cleanly (no traceback)**; the exact reason code **MAY**
+differ between conforming implementations — some reject at parse time
+(`bad_json`), others at a later structural check — and both conform as long as
+the verdict is rejection.
+
 ---
 
 ## 9. Test Vectors
@@ -500,6 +521,8 @@ the indicated reason code.
 | `tampered_bigint.jsonl` | **REJECTED** (exit 1) | `bad_json`: integer magnitude out of range (`> 2^53 − 1`). |
 | `tampered_nonobject.jsonl` | **REJECTED** (exit 1) | `not_object`: a JSON array/scalar line, not an object. |
 | `tampered_bad_version.jsonl` | **REJECTED** (exit 1) | `bad_version`: a record whose `v` is not `1` (here, absent). |
+| `tampered_bool_version.jsonl` | **REJECTED** (exit 1) | `bad_version`: `"v": true` — the JSON boolean, not the integer `1`; rejected even though `true == 1` in some languages. |
+| `tampered_chain_type.jsonl` | **REJECTED** (exit 1) | `bad_chain_type`: a non-string `chain` value. |
 | `tampered_astral_key.jsonl` | **REJECTED** (exit 1) | `bad_json`: a non-BMP object key (`> U+FFFF`); see Section 4d. |
 | `tampered_deepnest.jsonl` | **REJECTED** (exit 1) | `bad_json`: pathologically nested JSON, rejected cleanly with no traceback; see Section 8.5. |
 | `tampered_nfc_collision.jsonl` | **REJECTED** (exit 1) | `bad_json`: two NFC-equivalent object keys; see Section 4e. |

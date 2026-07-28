@@ -82,6 +82,8 @@ tail cases, so we narrowed it. That correction is the point of publishing.
 | `tampered_astral_key.jsonl` | **REJECTED** (a non-BMP object key) |
 | `tampered_deepnest.jsonl` | **REJECTED** cleanly (pathologically nested JSON — no crash) |
 | `tampered_nfc_collision.jsonl` | **REJECTED** (two NFC-equivalent object keys) |
+| `tampered_bool_version.jsonl` | **REJECTED** (`"v": true` — the JSON boolean, not the integer 1) |
+| `tampered_chain_type.jsonl` | **REJECTED** (`chain` is not a string) |
 
 Reproduce + regenerate: `python3 test_verify.py` (deterministic — regenerates every vector and
 asserts the expected exit codes).

@@ -125,6 +125,13 @@ def main():
     write_raw("tampered_nfc_collision.jsonl",
               '{"v":1,%s:1,%s:2,"chain":"x"}\n' % (json.dumps(_k1), json.dumps(_k2)))
 
+    # (16) "v" as JSON boolean true (== 1 in Python but not the integer 1) => REJECTED
+    # (bad_version) — cross-language conformance: a strict impl rejects it, so we must too.
+    write_raw("tampered_bool_version.jsonl", '{"v":true,"chain":"x"}\n')
+
+    # (17) non-string "chain" => REJECTED (bad_chain_type)
+    write_raw("tampered_chain_type.jsonl", '{"v":1,"chain":123}\n')
+
     cases = [("valid.jsonl", 0, "valid accepted (256-bit v1)", ()),
              ("valid.jsonl", 0, "valid + correct anchor accepted", ("--expect-head", head, "--expect-count", "4")),
              ("valid.jsonl", 1, "valid + wrong anchor rejected", ("--expect-head", "0" * 64)),
@@ -143,7 +150,9 @@ def main():
              ("tampered_bad_version.jsonl", 1, "missing/unknown version rejected", ()),
              ("tampered_astral_key.jsonl", 1, "astral (non-BMP) key rejected", ()),
              ("tampered_deepnest.jsonl", 1, "deeply-nested JSON rejected cleanly (no traceback)", ()),
-             ("tampered_nfc_collision.jsonl", 1, "NFC-equivalent keys rejected", ())]
+             ("tampered_nfc_collision.jsonl", 1, "NFC-equivalent keys rejected", ()),
+             ("tampered_bool_version.jsonl", 1, "v=true (boolean) rejected", ()),
+             ("tampered_chain_type.jsonl", 1, "non-string chain rejected", ())]
     ok = True
     for name, expect_rc, desc, extra in cases:
         rc, out = run(os.path.join(VEC, name), *extra)

@@ -124,10 +124,18 @@ def verify(path, expect_head=None, expect_count=None):
                 return {"ok": False, "reason": "bad_json", "index": i, "detail": str(e)[:80]}
             if not isinstance(rec, dict):
                 return {"ok": False, "reason": "not_object", "index": i}
-            if rec.get("v") != 1:
-                return {"ok": False, "reason": "bad_version", "index": i, "detail": repr(rec.get("v"))[:40]}
+            _v = rec.get("v")
+            # "v" MUST be the integer 1. Reject the JSON boolean true, which equals 1
+            # in Python (True == 1) but is not the integer 1 — a strict re-implementation
+            # in another language rejects it, so we must too (cross-language conformance).
+            if _v != 1 or isinstance(_v, bool):
+                return {"ok": False, "reason": "bad_version", "index": i, "detail": repr(_v)[:40]}
             if "chain" not in rec:
                 return {"ok": False, "reason": "missing_chain", "index": i}
+            if not isinstance(rec.get("chain"), str):
+                # 'chain' MUST be a (hex) string; a non-string value never equals the
+                # computed hex link but we reject it explicitly for a clear reason.
+                return {"ok": False, "reason": "bad_chain_type", "index": i}
             try:
                 expected = hashlib.sha256((prev + "\x00" + _canonical(rec)).encode("utf-8")).hexdigest()
             except (ValueError, UnicodeError, RecursionError) as e:
