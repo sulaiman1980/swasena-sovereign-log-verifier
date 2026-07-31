@@ -1,6 +1,6 @@
 # Swasena Sovereign Log — Independent Verifier
 
-**Verify it yourself — don't trust us.**
+**Independently verifiable: the log's integrity is checked by recomputation, using this repository's tools only — no trust in the producer required.**
 
 A self-contained tool and open specification for a **tamper-evident**, append-only sovereign
 audit log. It re-verifies a log **without any network and without any Swasena code** — Python

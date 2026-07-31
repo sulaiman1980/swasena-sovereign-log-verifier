@@ -622,4 +622,4 @@ a natural extension.
 ---
 
 *Only proven claims are asserted here. Stated limits are stated on purpose — they
-are the differentiator, not a footnote. Verify it yourself; do not trust us.*
+are the differentiator, not a footnote.*
